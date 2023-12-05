@@ -164,11 +164,11 @@ void affichageTrainBy_Departure_AND_Arrival(char **trains, int arraylength)
         {
             sscanf(trains[i], "%d;%[^;];%[^;];%[^;];%[^;];%f;%s", &trainNumber, departure, arrival, limit1, limit2, &price, promotion);
 
-            if (strcmp(promotion, "REDUC"))
+            if (strcmp(promotion, "REDUC")==0)
             {
                 price *= 0.8;
             }
-            else if (strcmp(promotion, "SUPPL"))
+            else if (strcmp(promotion, "SUPPL")==0)
             {
                 price *= 1.1;
             }

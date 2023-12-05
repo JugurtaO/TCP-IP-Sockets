@@ -30,7 +30,7 @@ char **getAllTrains(char *sncf)
 }
 char **getTrainBy_Departure_AND_Arrival(char *departure, char *arrival, char *sncf)
 {
-    printf("I'm in !\n");
+    printf("I'm in getTrainBy_Departure_AND_Arrival !\n");
     // on déclare un tableau des trains que l'on recherche dans le tas
     char **searchTrains = (char **)malloc(sizeof(char *) * 50);
     // chaîne de caractères qui va accueillir la ligne lu du document
@@ -131,12 +131,12 @@ char **getTrainsOverSlotTime(char *departure, char *arrival, char *limit1, char 
         sscanf(allTrainsByGiven_Departure_AND_Arrival[i], "%d;%[^;];%[^;];%[^;];%[^;];%f;%s", &trainNumber, departureT, arrivalT, born1, born2, &price, promotion);
         // We check wether the departure time born1 is between limite1 and limit2
      
-        if ((strcmp(born1, limit1) > 0 && strcmp(born1, limit2) <0 ) || (strcmp(born1, limit1)==0 || strcmp(born1, limit2)==0 )) //|| strcmp(born1, limit1)==0 || strcmp(born1, limit2)==0
+        if ((strcmp(born1, limit1) > 0 && strcmp(born1, limit2) <0 ) || (strcmp(born1, limit1)==0 || strcmp(born1, limit2)==0 ))
         {   
-            printf("#### Born1 %s ####:\n",born1);
+            printf("#### Born1 : %s \n",born1);
             requestedTrains[i] =malloc(sizeof(char) * 512);
             strcpy(requestedTrains[i], allTrainsByGiven_Departure_AND_Arrival[i]);
-            printf("#### TRAIN %d >> %s ####:\n",i,requestedTrains[i]);
+            printf("#### TRAIN %d >> %s \n",i,requestedTrains[i]);
         }
     }
     requestedTrains[i] = NULL;
