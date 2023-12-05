@@ -7,6 +7,7 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "nombre d'arguments invalides\n");
         fprintf(stderr, "Usage ./mainServer port path/file.txt\n");
+        
     }
 
     // récupération du port depuis les arguments à l'appel du programme

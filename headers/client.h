@@ -18,3 +18,6 @@ void askAndSendDeparture(int socketServeur);
 void askAndSendArrival(int socketServeur);
 void affichageTrainBy_Departure_AND_Arrival(char** trains ,int arraylength);
 void getServeurTrainBy_Departure_AND_Arrival(int socketServeur);
+void getAllTrainsFromTheServer(int socketService);
+void getAllTrainsWithGivenSlotTime(int socketService);
+void askAndSendTime(int socketServeur,int N);

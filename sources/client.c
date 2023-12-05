@@ -29,53 +29,25 @@ void dialogueServeur(int socketServeur, struct sockaddr_in *adserv)
         afficherMenu();
         printf("option >>: ");
         scanf("%d", &user_int);
+        while (user_int < -1 || user_int > 3)
+        {
+            printf("choose valid option >>: ");
+            scanf("%d", &user_int);
+        }
 
         switch (user_int)
         {
         case 0:
-            int arrayLength = 0;
-            int strLength = 0;
-            char train[1024];
-            // sending choosed option
-            printf("I send %d\n", user_int);
-            write(socketServeur, &user_int, sizeof(int));
-            // reading allTrains array length
-            read(socketServeur, &arrayLength, sizeof(int));
-            if (arrayLength != 0)
-            {
-                printf("HERE IS THE LIST OF FOUND TRAINS  \n");
-                for (int i = 0; i < arrayLength; i++)
-                {
-                    // reading size of the train number i
-                    read(socketServeur, &strLength, sizeof(int));
-
-                    // reading the value of the train number i
-                    read(socketServeur, train, strLength * sizeof(char));
-                    printf("%s\n", train);
-
-                    // clean the buffer train
-                    for (int j = 0; j < strLength; j++)
-                    {
-                        train[j] = '\0';
-                    }
-                }
-            }
-            else
-            {
-                printf("No train was found !");
-            }
-            char user_char;
-            printf("press q to quit : \n");
-            scanf("%c", &user_char);
-            while (user_char != 'q')
-            {
-                scanf("%c", &user_char);
-            }
-            printf("***********EXIT = %d\n", exit);
+            getAllTrainsFromTheServer(socketServeur);
+            // printf("***********EXIT = %d\n", exit);
+            break;
+        case 2:
+            getAllTrainsWithGivenSlotTime(socketServeur);
+            // printf("***********EXIT = %d\n", exit);
             break;
         case 3:
             getServeurTrainBy_Departure_AND_Arrival(socketServeur);
-            printf("***********EXIT = %d\n", exit);
+            // printf("***********EXIT = %d\n", exit);
             break;
         case -1:
             exit = 0;
@@ -179,15 +151,15 @@ void affichageTrainBy_Departure_AND_Arrival(char **trains, int arraylength)
     float price = 0.0;
     char promotion[50];
 
-    if (arraylength<=0)
+    if (arraylength <= 0)
     {
-        printf("No train was found !");
+        printf("No train was found  !");
     }
     else
     {
         int i = 0;
         sscanf(trains[0], "%d;%[^;];%[^;];%[^;];%[^;];%f;%s", &trainNumber, departure, arrival, limit1, limit2, &price, promotion);
-        printf("Here are the trains that will go from %s to %s :\n", departure, arrival);
+        printf("Here are the trains going from %s to %s :\n", departure, arrival);
         while (i < arraylength)
         {
             sscanf(trains[i], "%d;%[^;];%[^;];%[^;];%[^;];%f;%s", &trainNumber, departure, arrival, limit1, limit2, &price, promotion);
@@ -220,4 +192,82 @@ void affichageTrainBy_Departure_AND_Arrival(char **trains, int arraylength)
     {
         scanf("%c", &user_char);
     }
+}
+
+void getAllTrainsFromTheServer(int socketService)
+{
+    int user_int = 0;
+    int arrayLength = 0;
+    int strLength = 0;
+    char train[1024];
+    // sending choosed option
+    printf("I send %d\n", user_int);
+    write(socketService, &user_int, sizeof(int));
+    // reading allTrains array length
+    read(socketService, &arrayLength, sizeof(int));
+    if (arrayLength != 0)
+    {
+        printf("HERE IS THE LIST OF FOUND TRAINS  \n");
+        for (int i = 0; i < arrayLength; i++)
+        {
+            // reading size of the train number i
+            read(socketService, &strLength, sizeof(int));
+
+            // reading the value of the train number i
+            read(socketService, train, strLength * sizeof(char));
+            printf("%s\n", train);
+
+            // clean the buffer train
+            for (int j = 0; j < strLength; j++)
+            {
+                train[j] = '\0';
+            }
+        }
+    }
+    else
+    {
+        printf("No train was found !");
+    }
+    char user_char;
+    printf("press q to quit : \n");
+    scanf("%c", &user_char);
+    while (user_char != 'q')
+    {
+        scanf("%c", &user_char);
+    }
+    // printf("***********EXIT = %d\n", exit);
+}
+
+void getAllTrainsWithGivenSlotTime(int socketService)
+{
+    int arrayLength;
+
+    // sending choosed option
+    int user_int = 2;
+    write(socketService, &user_int, sizeof(int));
+
+    askAndSendDeparture(socketService);
+    askAndSendArrival(socketService);
+    // read and send the two time limits to the server
+    askAndSendTime(socketService, 1);
+    askAndSendTime(socketService, 2);
+    char **trains = getListeTrain(socketService, &arrayLength);
+    affichageTrainBy_Departure_AND_Arrival(trains, arrayLength);
+    free(trains);
+}
+
+void askAndSendTime(int socketServeur, int N)
+{
+    char born[50];
+    printf("Enter limit %d :  (format dd:dd):\n", N);
+    // Ask user the value of born
+    scanf("%s", born);
+    printf("I scan : %s \n", born);
+    // mesuring the length of born
+    int len = strlen(born);
+    printf("len : %d \n", len);
+    // sending departure length
+    write(socketServeur, &len, sizeof(int));
+    // sending departure
+    write(socketServeur, born, sizeof(char) * len);
 }
