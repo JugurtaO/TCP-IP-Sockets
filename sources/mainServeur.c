@@ -11,37 +11,29 @@ int main(int argc, char **argv)
 
     // récupération du port depuis les arguments à l'appel du programme
     int port = atoi(argv[1]);
-    while(port<3000){
+    while (port < 3000)
+    {
         printf("Please choose a port higher than or equal to 3000 \n");
-        scanf("%d",&port);
+        scanf("%d", &port);
     }
 
-    FILE *sncf = fopen(argv[2], "r");
-    if (sncf == NULL)
+    char *sncf = argv[2];
+
+    struct sockaddr_in sockAddr;
+    int socketServeur = initServeur(&sockAddr, port);
+    printf("Server successfully configured!\n");
+    int errlisten = listen(socketServeur, 10);
+    printf("App runs on port %d\n", port);
+    if (errlisten == -1)
     {
-        perror(argv[2]);
-        fprintf(stderr,"Please provide the full path to %s\n",argv[2]);
+        perror("Listen : ");
         exit(0);
     }
-    else
-    {
-        struct sockaddr_in sockAddr;
-        int socketServeur = initServeur(&sockAddr, port);
-        printf("Server successfully configured!\n");
-        int errlisten = listen(socketServeur, 10);
-        printf("App runs on port %d\n",port);
-        if (errlisten == -1)
-        {
-            perror("Listen : ");
-            exit(0);
-        }
 
-        // Prêt à recevoir les requêtes éternellement
-        mainloop(socketServeur, &sockAddr,sncf);
+    // Prêt à recevoir les requêtes éternellement
+    mainloop(socketServeur, &sockAddr, sncf);
 
-        fclose(sncf);
-        
-    }
+    
 
     return 0;
 }

@@ -12,6 +12,10 @@
 struct sockaddr_in sockaddr_inConstructor();
 int initServeur( struct sockaddr_in *sockAddr,int port);
 
-int mainloop(int DescripteurSocket, struct sockaddr_in *sockAddr,FILE *sncf);
+int mainloop(int socketServeur, struct sockaddr_in *socketClient, char *sncf);
 
-void dialogueClient(int SocketService,FILE * sncf);
+void dialogueClient(int SocketService,char* sncf);
+void sendListeTrains(int socketService,char **allTrains);
+void sendAllTrains(int socketService,char* sncf);
+void sendTrainBy_Departure_AND_Arrival(int socketService,char* sncf);
+void clearSocket(int socket);
