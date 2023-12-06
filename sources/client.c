@@ -50,6 +50,7 @@ void dialogueServeur(int socketServeur, struct sockaddr_in *adserv)
             // printf("***********EXIT = %d\n", exit);
             break;
         case -1:
+            cutConnexion(socketServeur);
             exit = 0;
         default:
             break;
@@ -113,14 +114,23 @@ char **getListeTrain(int socketServeur, int *arrayLength)
 }
 void askAndSendDeparture(int socketServeur)
 {
+    printf("############## DEPARTURE ##########\n");
+
     char departure[50];
-    printf("Enter departure town (and trainstation if there is more than one):\n");
+    printf("Enter departure town or train station :\n");
     // Ask user the value of departure
-    scanf("%s", departure);
+    clearInputBuffer();
+    scanf("%[^\n]s", departure);
+    // fgets(departure, 50, stdin);
+
     printf("I scan : %s \n", departure);
     // mesuring the length of departure
     int len = strlen(departure);
     printf("len : %d \n", len);
+    if(departure[len-1]==' '){
+        departure[len-1]='\0';
+        len--;
+    }
     // sending departure length
     write(socketServeur, &len, sizeof(int));
     // sending departure
@@ -128,14 +138,22 @@ void askAndSendDeparture(int socketServeur)
 }
 void askAndSendArrival(int socketServeur)
 {
+    printf("############## ARRIVAL ############\n");
     char arrival[50];
-    printf("Enter arrival town (and trainstation if there is more than one):\n");
+    printf("Enter arrival town or train station :\n");
     // Ask user the value of departure
-    scanf("%s", arrival);
+    
+    clearInputBuffer();
+    scanf("%[^\n]s", arrival);
+    // fgets(arrival, 50, stdin);
     printf("I scan : %s \n", arrival);
     // mesuring the length of departure
     int len = strlen(arrival);
     printf("len : %d \n", len);
+    if(arrival[len-1]==' '){
+        arrival[len-1]='\0';
+        len--;
+    }
     // sending departure length
     write(socketServeur, &len, sizeof(int));
     // sending departure
@@ -150,7 +168,8 @@ void affichageTrainBy_Departure_AND_Arrival(char **trains, int arraylength)
     char limit2[50];
     float price = 0.0;
     char promotion[50];
-
+    char* cheapTrain;
+    float minprice=FLT_MAX;
     if (arraylength <= 0)
     {
         printf("No train was found  !");
@@ -164,18 +183,24 @@ void affichageTrainBy_Departure_AND_Arrival(char **trains, int arraylength)
         {
             sscanf(trains[i], "%d;%[^;];%[^;];%[^;];%[^;];%f;%s", &trainNumber, departure, arrival, limit1, limit2, &price, promotion);
 
-            if (strcmp(promotion, "REDUC")==0)
+            if (strcmp(promotion, "REDUC") == 0)
             {
                 price *= 0.8;
             }
-            else if (strcmp(promotion, "SUPPL")==0)
+            else if (strcmp(promotion, "SUPPL") == 0)
             {
                 price *= 1.1;
             }
-
+            if(price<minprice){
+                minprice=price;
+                cheapTrain=trains[i];
+            }
             printf("Train N°: %d leaving at %s and arriving at %s\n    price : %.2f\n", trainNumber, limit1, limit2, price);
             i++;
         }
+        sscanf(cheapTrain, "%d;%[^;];%[^;];%[^;];%[^;];%f;%s", &trainNumber, departure, arrival, limit1, limit2, &price, promotion);
+        printf("----------------------\nThe lower price for this travel is %.2f for \n",minprice);
+        printf("Train N°: %d leaving at %s and arriving at %s\n----------------------\n", trainNumber, limit1, limit2);
     }
 
     char user_char;
@@ -226,7 +251,7 @@ void getAllTrainsFromTheServer(int socketService)
     }
     else
     {
-        printf("No train was found !");
+        printf("No train was found !\n");
     }
     char user_char;
     printf("press q to quit : \n");
@@ -257,17 +282,49 @@ void getAllTrainsWithGivenSlotTime(int socketService)
 }
 
 void askAndSendTime(int socketServeur, int N)
-{
+{   
+    int flag=1;
     char born[50];
-    printf("Enter limit %d :  (format dd:dd):\n", N);
+    int heures=0;
+    int minutes=0;
+    int len=0;
+    printf("############## TIME DEPARTURE ############\n");
+    while(flag){
+    printf("Enter limit %d :  (format HH:mm):\n", N);
     // Ask user the value of born
     scanf("%s", born);
     printf("I scan : %s \n", born);
+    
     // mesuring the length of born
-    int len = strlen(born);
+    len = strlen(born);
+    if(len==5){
+    if(born[0]=='0'){
+        for(int i=1;i<=len;i++){
+            born[i-1]=born[i];
+        }
+        len--;
+    }
+    sscanf(born,"%d:%d",&heures,&minutes);
+    
+    if (heures<24&&heures>=0&&minutes<60&&minutes>=0){
+        flag=0;
+    }
+    }
+    }
     printf("len : %d \n", len);
     // sending departure length
     write(socketServeur, &len, sizeof(int));
     // sending departure
     write(socketServeur, born, sizeof(char) * len);
+}
+void clearInputBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {
+        // lire et ignorer les caractères du tampon d'entrée
+    }
+}
+void cutConnexion( int socketServeur){
+    int user_int=-1;
+    printf("I send %d\n", user_int);
+    write(socketServeur, &user_int, sizeof(int));
 }

@@ -5,6 +5,7 @@
  #include <stdio.h>
  #include <string.h>
  #include <stdlib.h>
+ #include <float.h>
 
 int initClient(struct sockaddr_in* sockaddr,char* hostname,int port);               
 void afficherMenu();
@@ -21,3 +22,6 @@ void getServeurTrainBy_Departure_AND_Arrival(int socketServeur);
 void getAllTrainsFromTheServer(int socketService);
 void getAllTrainsWithGivenSlotTime(int socketService);
 void askAndSendTime(int socketServeur,int N);
+
+void clearInputBuffer();
+void cutConnexion( int socketServeur);

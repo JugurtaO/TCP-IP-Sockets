@@ -113,6 +113,7 @@ char **getTrainsOverSlotTime(char *departure, char *arrival, char *limit1, char 
     int length = 0;
     while (allTrainsByGiven_Departure_AND_Arrival[length] != NULL)
     {
+        printf("*****************\nT:%s\n",allTrainsByGiven_Departure_AND_Arrival[length]);
         length++;
     }
 
@@ -125,21 +126,28 @@ char **getTrainsOverSlotTime(char *departure, char *arrival, char *limit1, char 
     float price = 0.0;
     char promotion[50];
 
-    int i = 0;
-    for (i = 0; i < length; i++)
+    int indice = 0;
+    for (int i = 0; i < length; i++)
     {
         sscanf(allTrainsByGiven_Departure_AND_Arrival[i], "%d;%[^;];%[^;];%[^;];%[^;];%f;%s", &trainNumber, departureT, arrivalT, born1, born2, &price, promotion);
         // We check wether the departure time born1 is between limite1 and limit2
      
-        if ((strcmp(born1, limit1) > 0 && strcmp(born1, limit2) <0 ) || (strcmp(born1, limit1)==0 || strcmp(born1, limit2)==0 ))
+        if ((strcmp(born1, limit1) >= 0 && strcmp(born1, limit2) <=0 ) /*|| (strcmp(born1, limit1)==0 || strcmp(born1, limit2)==0 )*/)
         {   
-            printf("#### Born1 : %s \n",born1);
-            requestedTrains[i] =malloc(sizeof(char) * 512);
-            strcpy(requestedTrains[i], allTrainsByGiven_Departure_AND_Arrival[i]);
-            printf("#### TRAIN %d >> %s \n",i,requestedTrains[i]);
+            requestedTrains[indice] =malloc(sizeof(char) * 512);
+            strcpy(requestedTrains[indice], allTrainsByGiven_Departure_AND_Arrival[i]);
+            printf("I copy :%s\n",requestedTrains[indice]);
+            indice++;
         }
     }
-    requestedTrains[i] = NULL;
+    requestedTrains[indice] = NULL;
+    printf("i final : %d",indice);
+    int j=0;
+    while (requestedTrains[j] != NULL)
+    {
+        printf("00000000000000000000\nT:%s\n",requestedTrains[j]);
+        j++;
+    }
     return requestedTrains;
 }
 

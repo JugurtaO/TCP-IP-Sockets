@@ -129,8 +129,12 @@ void dialogueClient(int socketService, char *sncf)
         sendTrainBy_Departure_AND_Arrival(socketService, sncf);
         // clearSocket(socketService);
         break;
-
+    case -1:
+        printf("I'm gonna die, help me father !\n");
+        exit(0);
     default:
+        printf("Error Connexion has been cut prematurly !");
+        exit(0);
         // send Get Request Unhandled by the server message to the client
         break;
     }
@@ -168,6 +172,7 @@ void sendListeTrains(int socketService, char **allTrains)
     }
     for (int i = 0; i < length; i++)
     {
+        printf("I free %s\n",allTrains[i]);
         free(allTrains[i]);
     }
 
@@ -270,6 +275,7 @@ void sendTrainsOverSlotTime(int socketService, char *sncf)
     Trains = getTrainsOverSlotTime(departure, arrival, born1, born2, sncf);
     sendListeTrains(socketService, Trains);
     printf("I did sendListTrains \n");
+    printf("I free variable \n");
     free(departure);
     free(arrival);
 }
