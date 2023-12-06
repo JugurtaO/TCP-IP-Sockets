@@ -22,6 +22,7 @@ void getServeurTrainBy_Departure_AND_Arrival(int socketServeur);
 void getAllTrainsFromTheServer(int socketService);
 void getAllTrainsWithGivenSlotTime(int socketService);
 void askAndSendTime(int socketServeur,int N);
-
+void getTrainbyHourAndCityFromServer(int socketServeur);
 void clearInputBuffer();
 void cutConnexion( int socketServeur);
+int compareTemps(char* limite1,char* limite2, int *tempsmin);

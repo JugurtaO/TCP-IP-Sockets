@@ -20,3 +20,5 @@ void sendAllTrains(int socketService, char *sncf);
 void sendTrainBy_Departure_AND_Arrival(int socketService, char *sncf);
 void clearSocket(int socket);
 void sendTrainsOverSlotTime(int socketService,char * sncf);
+void sendTrainbyHourAndCity(int socketService, char *sncf);
+void getDepartureAndArrival(int socketService , char*departure,char*arrival);

@@ -87,12 +87,13 @@ char **getTrainBy_Departure_AND_Arrival(char *departure, char *arrival, char *sn
 char *strtolower(char *dest, const char *src)
 {
     char *result = dest;
-    while (*dest++ = tolower(*src++));
+    while ((*dest++ = tolower(*src++)));
+        
     return result;
 }
 int cmpInlowerCase(char *str1, char *str2)
 {
-    printf("str1: %s str2: %s \n", str1, str2);
+    
     int result;
     char *cpy1 = (char *)malloc(sizeof(char) * 100);
     char *cpy2 = (char *)malloc(sizeof(char) * 100);
@@ -156,3 +157,67 @@ char **getTrainsOverSlotTime(char *departure, char *arrival, char *limit1, char 
 //     printf("result =%d\n",cmpInlowerCase(argv[1],argv[2]));
 
 // }
+
+char *getTrainByGivenDepartureCity(char *sncf, char *departure, char *arrival, char *hour){
+    
+    char **trainDepartureCity =(char**) malloc(sizeof(char*) * 50);
+
+    FILE* fichier = fopen(sncf,"r");
+    if(fichier == NULL){
+        perror("Ouverture de fichier : échec...");
+        exit(0);
+    }
+
+    /*creation of the table*/
+    //char currentLine[1024];
+    char *first_train=(char*) malloc(sizeof(char) * 50);
+    char *currentLine_exploitable =(char*) malloc(sizeof(char) * 50);
+    char *char_retour =(char*) malloc(sizeof(char) * 50);
+
+    /*filling in the table*/
+    // int i = 0;
+    
+    // char *stratCity;
+    // char *arrivedCity;
+    // while (fscanf(fichier, "%[^\n] ", currentLine) != EOF) {
+        
+    //     strcpy(currentLine_exploitable,currentLine);
+
+    //     strtok(currentLine, ";");
+    //     stratCity = strtok(NULL, ";");
+    //     arrivedCity = strtok(NULL, ";");
+    //     if (strcmp(departure,stratCity)==0 && strcmp(arrival,arrivedCity)==0){
+    //         trainDepartureCity[i] =(char*) malloc(sizeof(char) * 50);
+
+    //         strcpy(trainDepartureCity[i],currentLine_exploitable);
+    //         i++;
+    //     }
+    // }
+    trainDepartureCity =getTrainBy_Departure_AND_Arrival(departure, arrival, sncf);
+    /*research of table length*/
+    int len = 0;
+    while(trainDepartureCity[len] != NULL){
+        len++;
+    }
+  
+    /*Iterating through the array to select informations*/
+    for(int elm = 0; elm < len; elm++){
+        if(elm == 0){
+            strcpy(first_train,trainDepartureCity[elm]);
+        }
+        strcpy(currentLine_exploitable,trainDepartureCity[elm]);
+        strtok(trainDepartureCity[elm], ";");
+        strtok(NULL, ";");
+        strtok(NULL, ";");
+        char *hourTraject = strtok(NULL, ";");
+
+        if (strcmp(hourTraject,hour) >= 0){
+            strcpy(char_retour,currentLine_exploitable);
+        }
+
+    }
+    strcpy(char_retour,first_train);
+    fclose(fichier);
+    return char_retour;
+    
+}

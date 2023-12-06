@@ -15,3 +15,4 @@ char **getAllTrains(char*sncf);
 int cmpInlowerCase(char* str1,char*str2);
 char * strtolower( char * dest, const char * src );
 char ** getTrainsOverSlotTime(char *departure, char *arrival, char *limit1, char *limit2,char *sncf);
+char *getTrainByGivenDepartureCity(char *sncf, char *departure, char *arrival, char *hour);
