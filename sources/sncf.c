@@ -18,7 +18,6 @@ char **getAllTrains(char *sncf)
         {
             allTrains[i] = (char *)malloc(512 * sizeof(char));
             fscanf(SNCF, "%[^\n]\n", allTrains[i]);
-            printf("J'ai scanné  %s \n", allTrains[i]);
             i++;
         }
         allTrains[i] = NULL;
@@ -30,7 +29,6 @@ char **getAllTrains(char *sncf)
 }
 char **getTrainBy_Departure_AND_Arrival(char *departure, char *arrival, char *sncf)
 {
-    printf("I'm in getTrainBy_Departure_AND_Arrival !\n");
     // on déclare un tableau des trains que l'on recherche dans le tas
     char **searchTrains = (char **)malloc(sizeof(char *) * 50);
     // chaîne de caractères qui va accueillir la ligne lu du document
@@ -43,7 +41,8 @@ char **getTrainBy_Departure_AND_Arrival(char *departure, char *arrival, char *sn
     char limit2[50];
     float price = 0.0;
     char promotion[50];
-    // ouverture du fichier
+
+    // ouverture du fichier en mode lecture
 
     FILE *SNCF = fopen(sncf, "r");
     // Gestion de l'erreur d'ouverture
@@ -61,7 +60,6 @@ char **getTrainBy_Departure_AND_Arrival(char *departure, char *arrival, char *sn
         // tant que le fichier n'est pas fini on lit une ligne et on l'affecte à train
         while (!feof(SNCF))
         {
-            // fscanf(sncf,"%d;%s;%s;%s;%s;%f;%s",&trainNumber,departure,arrival,limit1,limit2,&price,promotion);
             fscanf(SNCF, "%[^\n]\n", train);
             // on récupére les caractéristiques du train
             sscanf(train, "%d;%[^;];%[^;];%[^;];%[^;];%f;%s", &trainNumber, departureT, arrivalT, limit1, limit2, &price, promotion);
@@ -71,11 +69,10 @@ char **getTrainBy_Departure_AND_Arrival(char *departure, char *arrival, char *sn
             {
                 searchTrains[i] = (char *)malloc(512 * sizeof(char));
                 strcpy(searchTrains[i], train);
-                printf("J'ai scan %s \n", searchTrains[i]);
                 i++;
             }
         }
-        printf("******************************\n");
+
         searchTrains[i] = NULL;
     }
 
@@ -87,19 +84,19 @@ char **getTrainBy_Departure_AND_Arrival(char *departure, char *arrival, char *sn
 char *strtolower(char *dest, const char *src)
 {
     char *result = dest;
-    while ((*dest++ = tolower(*src++)));
-        
+    while ((*dest++ = tolower(*src++)))
+        ;
+
     return result;
 }
 int cmpInlowerCase(char *str1, char *str2)
 {
-    
+
     int result;
     char *cpy1 = (char *)malloc(sizeof(char) * 100);
     char *cpy2 = (char *)malloc(sizeof(char) * 100);
     strtolower(cpy1, str1);
     strtolower(cpy2, str2);
-    // printf("I compare %s et %s copy of %s et %s\n", cpy1, cpy2, str1, str2);
     result = strcmp(cpy1, cpy2);
     free(cpy1);
     free(cpy2);
@@ -114,9 +111,9 @@ char **getTrainsOverSlotTime(char *departure, char *arrival, char *limit1, char 
     int length = 0;
     while (allTrainsByGiven_Departure_AND_Arrival[length] != NULL)
     {
-        printf("*****************\nT:%s\n",allTrainsByGiven_Departure_AND_Arrival[length]);
         length++;
     }
+   
 
     // variable accueillant les différents champs d'un train
     int trainNumber = 0;
@@ -132,92 +129,74 @@ char **getTrainsOverSlotTime(char *departure, char *arrival, char *limit1, char 
     {
         sscanf(allTrainsByGiven_Departure_AND_Arrival[i], "%d;%[^;];%[^;];%[^;];%[^;];%f;%s", &trainNumber, departureT, arrivalT, born1, born2, &price, promotion);
         // We check wether the departure time born1 is between limite1 and limit2
-     
-        if ((strcmp(born1, limit1) >= 0 && strcmp(born1, limit2) <=0 ) /*|| (strcmp(born1, limit1)==0 || strcmp(born1, limit2)==0 )*/)
-        {   
-            requestedTrains[indice] =malloc(sizeof(char) * 512);
+        
+       if  ((cmp2Time(born1, limit1) >= 0 && cmp2Time(born1, limit2) <= 0) )
+        {
+            requestedTrains[indice] = malloc(sizeof(char) * 512);
             strcpy(requestedTrains[indice], allTrainsByGiven_Departure_AND_Arrival[i]);
-            printf("I copy :%s\n",requestedTrains[indice]);
             indice++;
         }
     }
     requestedTrains[indice] = NULL;
-    printf("i final : %d",indice);
-    int j=0;
-    while (requestedTrains[j] != NULL)
-    {
-        printf("00000000000000000000\nT:%s\n",requestedTrains[j]);
-        j++;
-    }
+    departure=NULL;
+    arrival=NULL;
+    
+   
+
     return requestedTrains;
 }
 
-// test de la fonction cmpINlowerCase
-// int main(int argc, char **argv){
-//     printf("result =%d\n",cmpInlowerCase(argv[1],argv[2]));
+char *getTrainByGivenDepartureCity(char *sncf, char *departure, char *arrival, char *hour)
+{
 
-// }
-
-char *getTrainByGivenDepartureCity(char *sncf, char *departure, char *arrival, char *hour){
-    
-    char **trainDepartureCity =(char**) malloc(sizeof(char*) * 50);
-
-    FILE* fichier = fopen(sncf,"r");
-    if(fichier == NULL){
-        perror("Ouverture de fichier : échec...");
-        exit(0);
-    }
+    char **trainDepartureCity = (char **)malloc(sizeof(char *) * 50);
 
     /*creation of the table*/
-    //char currentLine[1024];
-    char *first_train=(char*) malloc(sizeof(char) * 50);
-    char *currentLine_exploitable =(char*) malloc(sizeof(char) * 50);
-    char *char_retour =(char*) malloc(sizeof(char) * 50);
+    char *first_train = (char *)malloc(sizeof(char) * 50);
+    first_train[0]='\0';
+    char *currentLine_exploitable = (char *)malloc(sizeof(char) * 50);
 
-    /*filling in the table*/
-    // int i = 0;
-    
-    // char *stratCity;
-    // char *arrivedCity;
-    // while (fscanf(fichier, "%[^\n] ", currentLine) != EOF) {
-        
-    //     strcpy(currentLine_exploitable,currentLine);
-
-    //     strtok(currentLine, ";");
-    //     stratCity = strtok(NULL, ";");
-    //     arrivedCity = strtok(NULL, ";");
-    //     if (strcmp(departure,stratCity)==0 && strcmp(arrival,arrivedCity)==0){
-    //         trainDepartureCity[i] =(char*) malloc(sizeof(char) * 50);
-
-    //         strcpy(trainDepartureCity[i],currentLine_exploitable);
-    //         i++;
-    //     }
-    // }
-    trainDepartureCity =getTrainBy_Departure_AND_Arrival(departure, arrival, sncf);
+    trainDepartureCity = getTrainBy_Departure_AND_Arrival(departure, arrival, sncf);
     /*research of table length*/
     int len = 0;
-    while(trainDepartureCity[len] != NULL){
+    while (trainDepartureCity[len] != NULL)
+    {
         len++;
     }
-  
+
     /*Iterating through the array to select informations*/
-    for(int elm = 0; elm < len; elm++){
-        if(elm == 0){
-            strcpy(first_train,trainDepartureCity[elm]);
+    for (int elm = 0; elm < len; elm++)
+    {
+        if (elm == 0)
+        {
+            strcpy(first_train, trainDepartureCity[elm]);
         }
-        strcpy(currentLine_exploitable,trainDepartureCity[elm]);
+        strcpy(currentLine_exploitable, trainDepartureCity[elm]);
         strtok(trainDepartureCity[elm], ";");
         strtok(NULL, ";");
         strtok(NULL, ";");
         char *hourTraject = strtok(NULL, ";");
 
-        if (strcmp(hourTraject,hour) >= 0){
-            strcpy(char_retour,currentLine_exploitable);
+        if (cmp2Time(hourTraject, hour) >= 0)
+        {
+            return currentLine_exploitable;
         }
-
     }
-    strcpy(char_retour,first_train);
-    fclose(fichier);
-    return char_retour;
     
+    return first_train;
+}
+
+int cmp2Time(char * time1, char*time2){
+    int heures1=0;
+    int heures2=0;
+    int minutes1=0;
+    int minutes2=0;
+    int tempsInmin1=0;
+    int tempsInmin2=0;
+    sscanf(time1,"%d:%d",&heures1,&minutes1);
+    sscanf(time2,"%d:%d",&heures2,&minutes2);    
+    tempsInmin1=heures1*60+minutes1;
+    tempsInmin2=heures2*60+minutes2;
+
+    return tempsInmin1-tempsInmin2;
 }

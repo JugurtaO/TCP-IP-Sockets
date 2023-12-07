@@ -1,8 +1,45 @@
 #include "../headers/serveur.h"
 #include "../headers/sncf.h"
+// handler to wait a child when he died
 void end_child()
 {
-    wait(NULL);
+    int myPid = wait(NULL);
+    if (myPid != -1)
+    {
+        bool found = false;
+        int i = 0;
+        while (!found && i < MAX_SIZE)
+        {
+            if (Pid_fils[i] != NULL)
+            {
+                if (*(Pid_fils[i]) == myPid)
+                {
+                    Pid_fils[i] = NULL;
+                    Number_Pid_fils--;
+                }
+            }
+            i++;
+        }
+    }
+    else
+    {
+        perror("wait :");
+    }
+}
+
+void end_serveur()
+{
+    int i = 0;
+    while (i < MAX_SIZE && Number_Pid_fils != 0)
+    {
+        if (Pid_fils[i] != NULL)
+        {
+            kill(*Pid_fils[i], SIGINT);
+            Number_Pid_fils--;
+        }
+        i++;
+    }
+    exit(0);
 }
 int initServeur(struct sockaddr_in *sockAddr, int port)
 {
@@ -11,6 +48,12 @@ int initServeur(struct sockaddr_in *sockAddr, int port)
     ac.sa_handler = end_child;
     ac.sa_flags = SA_RESTART;
     sigaction(SIGCHLD, &ac, NULL);
+    signal(SIGINT, end_serveur);
+    // initialisation du tableau globale contenant les pid fils
+    for (int i = 0; i < MAX_SIZE; i++)
+    {
+        Pid_fils[i] = NULL;
+    }
 
     // création de la socket d'écoute (connectée)
     int socketServeur = socket(AF_INET, SOCK_STREAM, 0);
@@ -40,31 +83,41 @@ int initServeur(struct sockaddr_in *sockAddr, int port)
 int mainloop(int socketServeur, struct sockaddr_in *socketClient, char *sncf)
 {
     // Serveur éternel à l'écoute
+    int pid;
     while (1)
     {
-        int len = sizeof(struct sockaddr_in);
-        printf("waiting for connection\n");
-        int socketService = accept(socketServeur, (struct sockaddr *)socketClient, (unsigned int *)&len);
-        switch (fork())
+        if (Number_Pid_fils < MAX_SIZE)
         {
-        case -1:
-            perror("accept : ");
-            exit(0);
-        case 0:
-
-            printf("Child process is born!\n");
-            close(socketServeur);
-            while (1)
+            int len = sizeof(struct sockaddr_in);
+            printf("Waiting for connection ...\n");
+            int socketService = accept(socketServeur, (struct sockaddr *)socketClient, (unsigned int *)&len);
+            pid = fork();
+            switch (pid)
             {
+            case -1:
+                perror("accept : ");
+                exit(0);
+            case 0:
 
-                dialogueClient(socketService, sncf);
+                printf("Child process is born [ NEW USER IS SUCCESSFULLY CONNECTED ! - TOTAL USERS  = %d ] \n", Number_Pid_fils+1);
+                close(socketServeur);
+                while (1)
+                {
+
+                    dialogueClient(socketService, sncf);
+                }
+
+                exit(0);
+
+            default:
+                Pid_fils[Number_Pid_fils] = (int *)malloc(sizeof(int));
+                *(Pid_fils[Number_Pid_fils]) = pid;
+                Number_Pid_fils++;
+                close(socketService);
+                break;
             }
-
-            exit(0);
-
-        default:
-            close(socketService);
-            break;
+        }else{
+            printf("MAX AMOUNT OF USERS IS REACHED : %d",MAX_SIZE);
         }
     }
 }
@@ -112,16 +165,14 @@ void dialogueClient(int socketService, char *sncf)
 
     int buffer;
 
-    printf("reading mode\n");
     read(socketService, &buffer, sizeof(int));
-    printf("I read option N° %d\n", buffer);
     switch (buffer)
     {
     case 0:
         sendAllTrains(socketService, sncf);
         break;
     case 1:
-        sendTrainbyHourAndCity(socketService,sncf);
+        sendTrainbyHourAndCity(socketService, sncf);
         break;
     case 2:
         sendTrainsOverSlotTime(socketService, sncf);
@@ -136,7 +187,6 @@ void dialogueClient(int socketService, char *sncf)
     default:
         printf("Error Connexion has been cut prematurly !\n");
         exit(0);
-        // send Get Request Unhandled by the server message to the client
         break;
     }
 }
@@ -150,7 +200,6 @@ void sendListeTrains(int socketService, char **allTrains)
     }
 
     // sending the size of the trains array
-    printf("I do send length number of train's lines %d\n", length);
     write(socketService, &length, sizeof(int));
 
     /*here we send all trains according to the following rules:
@@ -164,20 +213,14 @@ void sendListeTrains(int socketService, char **allTrains)
 
         // sending the size of the string
         write(socketService, &strLength, sizeof(int));
-        printf("I send length \n");
 
         // sending the string (train -> full line of sncf.txt file)
         write(socketService, allTrains[i], strLength * sizeof(char));
-        printf("TRAIN N° %d | %s\n", i, allTrains[i]);
-        printf("i:%d<%d \n", i, length);
     }
     for (int i = 0; i < length; i++)
     {
-        printf("I free %s\n",allTrains[i]);
         free(allTrains[i]);
     }
-
-    printf("I go out of the for \n");
 }
 
 void sendAllTrains(int socketService, char *sncf)
@@ -191,30 +234,11 @@ void sendTrainBy_Departure_AND_Arrival(int socketService, char *sncf)
     char **listeTrains;
     char *departure = (char *)malloc(sizeof(char) * 50);
     char *arrival = (char *)malloc(sizeof(char) * 50);
-    getDepartureAndArrival(socketService , departure,arrival);
-    printf("I do getTrainBy_Departure_AND_Arrival \n");
+    getDepartureAndArrival(socketService, departure, arrival);
     listeTrains = getTrainBy_Departure_AND_Arrival(departure, arrival, sncf);
-    printf("I do sendListtrains \n");
     sendListeTrains(socketService, listeTrains);
-    printf("I did sendListtrains \n");
     free(departure);
     free(arrival);
-}
-void clearSocket(int socket)
-{
-    char buffer[1024];
-    ssize_t bytesRead;
-
-    // Utilisez une boucle pour lire et vider la socket
-    do
-    {
-        bytesRead = recv(socket, buffer, sizeof(buffer), 0);
-        if (bytesRead < 0)
-        {
-            perror("Erreur de lecture de la socket");
-            break;
-        }
-    } while (bytesRead > 0);
 }
 
 void sendTrainsOverSlotTime(int socketService, char *sncf)
@@ -229,112 +253,103 @@ void sendTrainsOverSlotTime(int socketService, char *sncf)
     int len = 0;
     // lecture de la taille de departure
     read(socketService, &len, sizeof(int));
-    printf("I read len =%d\n", len);
-    if(len==0){
-        fprintf(stderr,"Error no departure has been read\n");
+    if (len == 0)
+    {
+        fprintf(stderr, "Error: No departure city has been read !\n");
         exit(0);
     }
     // lecture de departure
     read(socketService, departure, sizeof(char) * len);
     departure[len] = '\0';
-    printf("I read departure =%s\n", departure);
     len = 0;
     // lecture de la taille de arrival
     read(socketService, &len, sizeof(int));
-    printf("I read len =%d\n", len);
-    if(len==0){
-        fprintf(stderr,"Error no arrival has been read\n");
+    if (len == 0)
+    {
+        fprintf(stderr, "Error: No arrival city has been read\n");
         exit(0);
     }
     // lecture de arrival
     read(socketService, arrival, sizeof(char) * len);
     arrival[len] = '\0';
-    printf("I read arrival =%s\n", arrival);
     len = 0;
     // lecture de la taille de limit1
     read(socketService, &len, sizeof(int));
-    printf("I read len =%d\n", len);
-        if(len==0){
-        fprintf(stderr,"Error no limit1 has been read\n");
+    if (len == 0)
+    {
+        fprintf(stderr, "Error : No time limit1 has been read\n");
         exit(0);
     }
     // lecture de limit1
     read(socketService, born1, sizeof(char) * len);
     born1[len] = '\0';
-    printf("I read born1 =%s\n", born1);
     len = 0;
     // lecture de la taille de limit2
     read(socketService, &len, sizeof(int));
-    printf("I read len =%d\n", len);
-    if(len==0){
-        fprintf(stderr,"Error no limit2 has been read\n");
+    if (len == 0)
+    {
+        fprintf(stderr, "Error : No time limit2 has been read\n");
         exit(0);
     }
     // lecture de limit2
     read(socketService, born2, sizeof(char) * len);
     born2[len] = '\0';
-    printf("I read born2 =%s\n", born2);
 
     Trains = getTrainsOverSlotTime(departure, arrival, born1, born2, sncf);
     sendListeTrains(socketService, Trains);
-    printf("I did sendListTrains \n");
-    printf("I free variable \n");
+
     free(departure);
     free(arrival);
 }
-void sendTrainbyHourAndCity(int socketService, char *sncf){
+void sendTrainbyHourAndCity(int socketService, char *sncf)
+{
     char *departure = (char *)malloc(sizeof(char) * 50);
     char *arrival = (char *)malloc(sizeof(char) * 50);
     char *hour = (char *)malloc(sizeof(char) * 50);
-    char *Train ;
+    char *Train;
 
-    getDepartureAndArrival(socketService , departure,arrival);
-    int len=0;
+    getDepartureAndArrival(socketService, departure, arrival);
+    int len = 0;
     // lecture de la taille de hour
     read(socketService, &len, sizeof(int));
-    printf("len h= %d\n",len);
     // lecture de hour
     read(socketService, hour, sizeof(char) * len);
-    printf("I read= %s\n",hour);
     hour[len] = '\0';
-    Train = getTrainByGivenDepartureCity(sncf,departure, arrival, hour);
-    printf("T: %s\n",Train);
-    int lenTrain=strlen(Train);
-    printf("lenTrain = %d\n",lenTrain);
-    
+    Train = getTrainByGivenDepartureCity(sncf, departure, arrival, hour);
+    int lenTrain = strlen(Train);
+
     // sending the size of the string
     write(socketService, &lenTrain, sizeof(int));
 
     // sending the string (train -> full line of sncf.txt file)
-    printf("T: %s\n",Train);
+
     write(socketService, Train, lenTrain * sizeof(char));
     free(departure);
     free(arrival);
     free(hour);
 }
-void getDepartureAndArrival(int socketService , char*departure,char*arrival){
+void getDepartureAndArrival(int socketService, char *departure, char *arrival)
+{
     int len = 0;
     // lecture de la taille de departure
     read(socketService, &len, sizeof(int));
-    printf("I read len =%d\n", len);
-    if(len==0){
-        fprintf(stderr,"Error no departure has been read\n");
+    if (len == 0)
+    {
+        fprintf(stderr, "Error : No departure city has been read\n");
         exit(0);
     }
     // lecture de departure
     read(socketService, departure, sizeof(char) * len);
     departure[len] = '\0';
-    printf("I read departure =%s\n", departure);
-    len=0;
+    len = 0;
     // lecture de la taille de arrival
     read(socketService, &len, sizeof(int));
-    printf("I read len =%d\n", len);
-    if(len==0){
-        fprintf(stderr,"Error no arrival has been read\n");
+    if (len == 0)
+    {
+        fprintf(stderr, "Error : No arrival city has been read\n");
         exit(0);
     }
     // lecture de arrival
     read(socketService, arrival, sizeof(char) * len);
     arrival[len] = '\0';
-    printf("I read arrival =%s\n", arrival);
 }
