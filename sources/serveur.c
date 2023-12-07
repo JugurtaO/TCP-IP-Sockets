@@ -29,16 +29,17 @@ void end_child()
 
 void end_serveur()
 {
-    int i = 0;
-    while (i < MAX_SIZE && Number_Pid_fils != 0)
-    {
-        if (Pid_fils[i] != NULL)
-        {
-            kill(*Pid_fils[i], SIGINT);
-            Number_Pid_fils--;
-        }
-        i++;
-    }
+    // int i = 0;
+    // while (i < MAX_SIZE && Number_Pid_fils != 0)
+    // {
+    //     if (Pid_fils[i] != NULL)
+    //     {
+    //         kill(*Pid_fils[i], SIGINT);
+    //         Number_Pid_fils--;
+    //     }
+    //     i++;
+    // }
+    kill(getpgrp(), SIGINT);
     exit(0);
 }
 int initServeur(struct sockaddr_in *sockAddr, int port)
@@ -99,7 +100,7 @@ int mainloop(int socketServeur, struct sockaddr_in *socketClient, char *sncf)
                 exit(0);
             case 0:
 
-                printf("Child process is born [ NEW USER IS SUCCESSFULLY CONNECTED ! - TOTAL USERS  = %d ] \n", Number_Pid_fils+1);
+                printf("Child process is born [ NEW USER IS SUCCESSFULLY CONNECTED ! - TOTAL USERS  = %d ] \n", Number_Pid_fils + 1);
                 close(socketServeur);
                 while (1)
                 {
@@ -116,8 +117,10 @@ int mainloop(int socketServeur, struct sockaddr_in *socketClient, char *sncf)
                 close(socketService);
                 break;
             }
-        }else{
-            printf("MAX AMOUNT OF USERS IS REACHED : %d",MAX_SIZE);
+        }
+        else
+        {
+            printf("MAX AMOUNT OF USERS IS REACHED : %d", MAX_SIZE);
         }
     }
 }
