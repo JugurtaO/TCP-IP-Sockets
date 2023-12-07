@@ -28,7 +28,7 @@ void dialogueServeur(int socketServeur, struct sockaddr_in *adserv)
     {
         afficherMenu();
         printf("option >>: ");
-        clearInputBuffer();
+        // clearInputBuffer();
         scanf("%d", &user_int);
         while (user_int < -1 || user_int > 3)
         {
