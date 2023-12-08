@@ -29,17 +29,17 @@ void end_child()
 
 void end_serveur()
 {
-    // int i = 0;
-    // while (i < MAX_SIZE && Number_Pid_fils != 0)
-    // {
-    //     if (Pid_fils[i] != NULL)
-    //     {
-    //         kill(*Pid_fils[i], SIGINT);
-    //         Number_Pid_fils--;
-    //     }
-    //     i++;
-    // }
-    kill(getpgrp(), SIGINT);
+    int i = 0;
+    while (i < MAX_SIZE && Number_Pid_fils != 0)
+    {
+        if (Pid_fils[i] != NULL)
+        {
+            kill(*Pid_fils[i], SIGINT);
+            Number_Pid_fils--;
+        }
+        i++;
+    }
+    // kill(getpgrp(), SIGINT);
     exit(0);
 }
 int initServeur(struct sockaddr_in *sockAddr, int port)
