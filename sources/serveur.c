@@ -85,10 +85,13 @@ int mainloop(int socketServeur, struct sockaddr_in *socketClient, char *sncf)
 {
     // Serveur éternel à l'écoute
     int pid;
+    bool alreadyReached = false;
     while (1)
     {
+    
         if (Number_Pid_fils < MAX_SIZE)
         {
+            alreadyReached=false;
             int len = sizeof(struct sockaddr_in);
             printf("Waiting for connection ...\n");
             int socketService = accept(socketServeur, (struct sockaddr *)socketClient, (unsigned int *)&len);
@@ -120,8 +123,11 @@ int mainloop(int socketServeur, struct sockaddr_in *socketClient, char *sncf)
         }
         else
         {
-            printf("MAX AMOUNT OF USERS IS REACHED : %d\n", MAX_SIZE);
-            
+            if (!alreadyReached)
+            {
+                printf("MAX AMOUNT OF USERS IS REACHED : %d\n", MAX_SIZE);
+                alreadyReached = true;
+            }
         }
     }
 }
