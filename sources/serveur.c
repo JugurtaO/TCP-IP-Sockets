@@ -120,7 +120,8 @@ int mainloop(int socketServeur, struct sockaddr_in *socketClient, char *sncf)
         }
         else
         {
-            printf("MAX AMOUNT OF USERS IS REACHED : %d", MAX_SIZE);
+            printf("MAX AMOUNT OF USERS IS REACHED : %d\n", MAX_SIZE);
+            
         }
     }
 }
